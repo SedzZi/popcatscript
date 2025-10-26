@@ -100,6 +100,7 @@ end
 addButton("Infinite Yield", "https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/main/latest.lua")
 addButton("Phantasm", "https://raw.githubusercontent.com/ATrainz/Phantasm/refs/heads/main/Games/TSB.lua")
 addButton("Garou Tech", "https://raw.githubusercontent.com/needanewphone32-eng/tsbfiles/refs/heads/main/Main1.lua")
+addButton("FE ChatHax", "https://obj.wearedevs.net/108324/scripts/FE%20ChatHax.lua")
 addButton("Fling", "https://pastebin.com/raw/LgZwZ7ZB")
 addButton("CTRL Click TP", "https://obj.wearedevs.net/2/scripts/Click%20Teleport.lua")
 addButton("31 Script", "https://pastebin.com/raw/FWwdST5Y")
