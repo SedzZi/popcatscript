@@ -1,0 +1,144 @@
+-- QuickScriptMenu (Otomatik Boyut + Alt Durum Etiketi)
+-- "F8" tuşu ile aç/kapat
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "QuickScriptMenu"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 220, 0, 160)
+mainFrame.Position = UDim2.new(0.5, -110, 0.5, -70)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.BackgroundColor3 = Color3.fromRGB(233, 220, 218) -- #E9DCDA
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -12, 0, 26)
+title.Position = UDim2.new(0, 6, 0, 6)
+title.BackgroundTransparency = 1
+title.Text = "Heqs Script"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(111, 55, 53) -- #6F3735 (daha koyu yazı rengi)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = mainFrame
+
+local buttonsFrame = Instance.new("Frame")
+buttonsFrame.Size = UDim2.new(1, -12, 1, -46)
+buttonsFrame.Position = UDim2.new(0, 6, 0, 36)
+buttonsFrame.BackgroundTransparency = 1
+buttonsFrame.Parent = mainFrame
+
+local layout = Instance.new("UIListLayout")
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 8)
+layout.Parent = buttonsFrame
+
+-- 🔹 Dinamik boyutlandırma
+layout.Changed:Connect(function()
+	mainFrame.Size = UDim2.new(0, 220, 0, 60 + layout.AbsoluteContentSize.Y)
+end)
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.AnchorPoint = Vector2.new(0.5, 0)
+statusLabel.Position = UDim2.new(0.5, 0, 1, 6)
+statusLabel.Size = UDim2.new(1, 0, 0, 18)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = ""
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 14
+statusLabel.TextColor3 = Color3.fromRGB(111, 55, 53) -- #6F3735
+statusLabel.Parent = mainFrame
+
+local function addButton(name, url)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(1, 0, 0, 32)
+	btn.BackgroundColor3 = Color3.fromRGB(111, 55, 53) -- #6F3735
+	btn.AutoButtonColor = false
+	btn.Font = Enum.Font.GothamSemibold
+	btn.TextSize = 16
+	btn.Text = name
+	btn.TextColor3 = Color3.fromRGB(233, 220, 218) -- #E9DCDA
+	btn.Parent = buttonsFrame
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+	btn.MouseEnter:Connect(function()
+		btn.BackgroundColor3 = Color3.fromRGB(130, 65, 63) -- Hover: biraz daha açık #6F3735 tonu
+	end)
+	btn.MouseLeave:Connect(function()
+		btn.BackgroundColor3 = Color3.fromRGB(111, 55, 53)
+	end)
+
+	btn.MouseButton1Click:Connect(function()
+		statusLabel.Text = ("[%s] Yükleniyor..."):format(name)
+		local ok, err = pcall(function()
+			loadstring(game:HttpGet(url))()
+		end)
+		if ok then
+			statusLabel.Text = ("[%s] Başarıyla çalıştırıldı."):format(name)
+		else
+			statusLabel.Text = ("[%s] Hata: %s"):format(name, tostring(err))
+		end
+		delay(4, function()
+			if statusLabel then statusLabel.Text = "" end
+		end)
+	end)
+end
+
+-- Butonlar
+addButton("Infinite Yield", "https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/main/latest.lua")
+addButton("Phantasm", "https://raw.githubusercontent.com/ATrainz/Phantasm/refs/heads/main/Games/TSB.lua")
+addButton("Garou Tech", "https://raw.githubusercontent.com/needanewphone32-eng/tsbfiles/refs/heads/main/Main1.lua")
+addButton("Fling", "https://pastebin.com/raw/LgZwZ7ZB")
+addButton("31 Script", "https://pastebin.com/raw/FWwdST5Y")
+addButton("Oto Build", "https://raw.githubusercontent.com/max2007killer/auto-build-not-limit/main/buildaboatv2obs.txt")
+addButton("Image Loader","https://raw.githubusercontent.com/TheRealAsu/BABFT/refs/heads/main/Loader.lua")
+addButton("Candy Farm","https://raw.githubusercontent.com/catblox1346/StensUIReMake/refs/heads/main/BabftRelated/FastestCandyFarm")
+addButton("Oto Build 2 KEYLİ","https://raw.githubusercontent.com/catblox1346/StensUIReMake/refs/heads/main/Script/BoatBuilderHub")
+addButton("Build Çalma KEY: N-314159", "https://raw.githubusercontent.com/novakoolhub/Scripts/main/Scripts/NovBoatR1")
+
+-- Menü toggle
+UserInputService.InputBegan:Connect(function(input, gp)
+	if gp then return end
+	if input.KeyCode == Enum.KeyCode.F8 then
+		if UserInputService:GetFocusedTextBox() then return end
+		mainFrame.Visible = not mainFrame.Visible
+	end
+end)
+
+-- Sürükleme sistemi
+local dragging, dragStart, startPos
+local function updateDrag(input)
+	local delta = input.Position - dragStart
+	mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+title.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		updateDrag(input)
+	end
+end) 
