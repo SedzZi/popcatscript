@@ -101,6 +101,7 @@ addButton("Infinite Yield", "https://raw.githubusercontent.com/DarkNetworks/Infi
 addButton("Phantasm", "https://raw.githubusercontent.com/ATrainz/Phantasm/refs/heads/main/Games/TSB.lua")
 addButton("Garou Tech", "https://raw.githubusercontent.com/needanewphone32-eng/tsbfiles/refs/heads/main/Main1.lua")
 addButton("Fling", "https://pastebin.com/raw/LgZwZ7ZB")
+addButton("CTRL Click TP", "https://obj.wearedevs.net/2/scripts/Click%20Teleport.lua")
 addButton("31 Script", "https://pastebin.com/raw/FWwdST5Y")
 addButton("Oto Build", "https://raw.githubusercontent.com/max2007killer/auto-build-not-limit/main/buildaboatv2obs.txt")
 addButton("Image Loader","https://raw.githubusercontent.com/TheRealAsu/BABFT/refs/heads/main/Loader.lua")
