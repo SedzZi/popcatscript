@@ -1,42 +1,79 @@
--- QuickScriptMenu (Otomatik Boyut + Alt Durum Etiketi)
--- "F8" tuşu ile aç/kapat
+-- 🔹 QuickScriptMenu (Sekmeli, Dinamik, Bildirimli)
+-- F8 ile aç/kapat
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
+-- 📌 Ana GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "QuickScriptMenu"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 220, 0, 160)
-mainFrame.Position = UDim2.new(0.5, -110, 0.5, -70)
+mainFrame.Size = UDim2.new(0, 260, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -130, 0.5, -100)
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.BackgroundColor3 = Color3.fromRGB(233, 220, 218) -- #E9DCDA
+mainFrame.BackgroundColor3 = Color3.fromRGB(233, 220, 218)
 mainFrame.BorderSizePixel = 0
 mainFrame.Visible = false
 mainFrame.Active = true
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
 mainFrame.Parent = screenGui
 
-Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
+local colors = {
+	bg = Color3.fromRGB(233, 220, 218),
+	btn = Color3.fromRGB(111, 55, 53),
+	txt = Color3.fromRGB(233, 220, 218)
+}
 
+-- 📌 Başlık
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -12, 0, 26)
+title.Size = UDim2.new(1, -36, 0, 28)
 title.Position = UDim2.new(0, 6, 0, 6)
 title.BackgroundTransparency = 1
-title.Text = "POP CAT HACK" -- 🔹 Başlık değiştirildi
+title.Text = "POP CAT HACK"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
-title.TextColor3 = Color3.fromRGB(111, 55, 53) -- #6F3735 (daha koyu yazı rengi)
+title.TextColor3 = colors.btn
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Parent = mainFrame
 
+-- 📌 Kapat (-) Butonu
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 24, 0, 24)
+closeButton.Position = UDim2.new(1, -28, 0, 6)
+closeButton.BackgroundColor3 = colors.btn
+closeButton.TextColor3 = colors.txt
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 18
+closeButton.Text = "-"
+Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 6)
+closeButton.Parent = mainFrame
+closeButton.MouseButton1Click:Connect(function()
+	mainFrame.Visible = false
+end)
+
+-- 📌 Sekme çubuğu
+local tabFrame = Instance.new("Frame")
+tabFrame.Size = UDim2.new(1, -12, 0, 30)
+tabFrame.Position = UDim2.new(0, 6, 0, 36)
+tabFrame.BackgroundTransparency = 1
+tabFrame.Parent = mainFrame
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+tabLayout.Padding = UDim.new(0, 8)
+tabLayout.Parent = tabFrame
+
+-- 📌 Buton alanı
 local buttonsFrame = Instance.new("Frame")
-buttonsFrame.Size = UDim2.new(1, -12, 1, -46)
-buttonsFrame.Position = UDim2.new(0, 6, 0, 36)
+buttonsFrame.Size = UDim2.new(1, -12, 1, -86)
+buttonsFrame.Position = UDim2.new(0, 6, 0, 70)
 buttonsFrame.BackgroundTransparency = 1
 buttonsFrame.Parent = mainFrame
 
@@ -45,102 +82,187 @@ layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Padding = UDim.new(0, 8)
 layout.Parent = buttonsFrame
 
--- 🔹 Dinamik boyutlandırma
-layout.Changed:Connect(function()
-	mainFrame.Size = UDim2.new(0, 220, 0, 60 + layout.AbsoluteContentSize.Y)
-end)
+-- 📌 Dinamik boyutlandırma
+local function updateFrameSize()
+	mainFrame.Size = UDim2.new(0, math.max(260, tabLayout.AbsoluteContentSize.X + 30),
+		0, math.max(120, layout.AbsoluteContentSize.Y + 100))
+end
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateFrameSize)
+tabLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateFrameSize)
 
+-- 📌 Durum etiketi
 local statusLabel = Instance.new("TextLabel")
 statusLabel.AnchorPoint = Vector2.new(0.5, 0)
 statusLabel.Position = UDim2.new(0.5, 0, 1, 6)
-statusLabel.Size = UDim2.new(1, 0, 0, 18)
+statusLabel.Size = UDim2.new(1, 0, 0, 20)
 statusLabel.BackgroundTransparency = 1
 statusLabel.Text = ""
-statusLabel.Font = Enum.Font.Gotham
+statusLabel.Font = Enum.Font.GothamBold
 statusLabel.TextSize = 14
-statusLabel.TextColor3 = Color3.fromRGB(111, 55, 53) -- #6F3735
+statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 statusLabel.Parent = mainFrame
 
-local function addButton(name, url)
+-- 🔹 Sekmeler
+local tabs = {
+	["Oyun 1"] = {
+		{"Infinite Yield", "https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/main/latest.lua"},
+		{"Phantasm", "https://raw.githubusercontent.com/ATrainz/Phantasm/refs/heads/main/Games/TSB.lua"},
+		{"Garou Tech", "https://raw.githubusercontent.com/needanewphone32-eng/tsbfiles/refs/heads/main/Main1.lua"},
+		{"FE ChatHax", "https://obj.wearedevs.net/108324/scripts/FE%20ChatHax.lua"},
+	},
+	["Oyun 2"] = {
+		{"Fling", "https://pastebin.com/raw/LgZwZ7ZB"},
+		{"CTRL Click TP", "https://obj.wearedevs.net/2/scripts/Click%20Teleport.lua"},
+		{"Oto Build", "https://raw.githubusercontent.com/max2007killer/auto-build-not-limit/main/buildaboatv2obs.txt"},
+		{"Candy Farm","https://raw.githubusercontent.com/catblox1346/StensUIReMake/refs/heads/main/BabftRelated/FastestCandyFarm"},
+		{"Build Çalma KEY: N-314159", "https://raw.githubusercontent.com/novakoolhub/Scripts/main/Scripts/NovBoatR1"},
+	},
+	["Ayarlar"] = {}
+}
+
+-- 🔹 Buton oluşturucu
+local function createButton(name, url)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(1, 0, 0, 32)
-	btn.BackgroundColor3 = Color3.fromRGB(111, 55, 53) -- #6F3735
+	btn.BackgroundColor3 = colors.btn
 	btn.AutoButtonColor = false
-	btn.Font = Enum.Font.GothamSemibold
+	btn.Font = Enum.Font.GothamBold
 	btn.TextSize = 16
 	btn.Text = name
-	btn.TextColor3 = Color3.fromRGB(233, 220, 218) -- #E9DCDA
-	btn.Parent = buttonsFrame
+	btn.TextColor3 = colors.txt
 	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-
-	btn.MouseEnter:Connect(function()
-		btn.BackgroundColor3 = Color3.fromRGB(130, 65, 63) -- Hover: biraz daha açık ton
-	end)
-	btn.MouseLeave:Connect(function()
-		btn.BackgroundColor3 = Color3.fromRGB(111, 55, 53)
-	end)
+	btn.Parent = buttonsFrame
 
 	btn.MouseButton1Click:Connect(function()
 		statusLabel.Text = ("[%s] Yükleniyor..."):format(name)
 		local ok, err = pcall(function()
 			loadstring(game:HttpGet(url))()
 		end)
-		if ok then
-			statusLabel.Text = ("[%s] Başarıyla çalıştırıldı."):format(name)
-		else
-			statusLabel.Text = ("[%s] Hata: %s"):format(name, tostring(err))
-		end
-		delay(4, function()
-			if statusLabel then statusLabel.Text = "" end
+		statusLabel.Text = ok and ("[%s] Başarıyla çalıştırıldı."):format(name) or ("[%s] Hata: %s"):format(name, err)
+		task.delay(4, function()
+			statusLabel.Text = ""
 		end)
 	end)
 end
 
--- 🔹 Butonlar
-addButton("Infinite Yield", "https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/main/latest.lua")
-addButton("Phantasm", "https://raw.githubusercontent.com/ATrainz/Phantasm/refs/heads/main/Games/TSB.lua")
-addButton("Garou Tech", "https://raw.githubusercontent.com/needanewphone32-eng/tsbfiles/refs/heads/main/Main1.lua")
-addButton("FE ChatHax", "https://obj.wearedevs.net/108324/scripts/FE%20ChatHax.lua")
-addButton("Fling", "https://pastebin.com/raw/LgZwZ7ZB")
-addButton("CTRL Click TP", "https://obj.wearedevs.net/2/scripts/Click%20Teleport.lua")
-addButton("31 Script", "https://pastebin.com/raw/FWwdST5Y")
-addButton("Oto Build", "https://raw.githubusercontent.com/max2007killer/auto-build-not-limit/main/buildaboatv2obs.txt")
-addButton("Image Loader","https://raw.githubusercontent.com/TheRealAsu/BABFT/refs/heads/main/Loader.lua")
-addButton("Candy Farm","https://raw.githubusercontent.com/catblox1346/StensUIReMake/refs/heads/main/BabftRelated/FastestCandyFarm")
-addButton("Oto Build 2 KEYLİ","https://raw.githubusercontent.com/catblox1346/StensUIReMake/refs/heads/main/Script/BoatBuilderHub")
-addButton("Build Çalma KEY: N-314159", "https://raw.githubusercontent.com/novakoolhub/Scripts/main/Scripts/NovBoatR1")
+-- 🔹 Sekme değiştirici
+local activeTab
+local function switchTab(tabName)
+	for _, c in ipairs(buttonsFrame:GetChildren()) do
+		if c:IsA("TextButton") or c:IsA("Frame") then c:Destroy() end
+	end
+	activeTab = tabName
 
--- 🔹 Menü toggle
+	if tabName == "Ayarlar" then
+		-- 🔸 Unload
+		local unloadButton = Instance.new("TextButton")
+		unloadButton.Size = UDim2.new(1, 0, 0, 32)
+		unloadButton.BackgroundColor3 = colors.btn
+		unloadButton.Font = Enum.Font.GothamBold
+		unloadButton.TextSize = 16
+		unloadButton.Text = "Unload"
+		unloadButton.TextColor3 = colors.txt
+		Instance.new("UICorner", unloadButton).CornerRadius = UDim.new(0,6)
+		unloadButton.Parent = buttonsFrame
+		unloadButton.MouseButton1Click:Connect(function()
+			screenGui:Destroy()
+		end)
+
+		-- 🔸 Reload
+		local reloadButton = Instance.new("TextButton")
+		reloadButton.Size = UDim2.new(1, 0, 0, 32)
+		reloadButton.BackgroundColor3 = colors.btn
+		reloadButton.Font = Enum.Font.GothamBold
+		reloadButton.TextSize = 16
+		reloadButton.Text = "Reload"
+		reloadButton.TextColor3 = colors.txt
+		Instance.new("UICorner", reloadButton).CornerRadius = UDim.new(0,6)
+		reloadButton.Parent = buttonsFrame
+		reloadButton.MouseButton1Click:Connect(function()
+			screenGui:Destroy()
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/SedzZi/popcatscript/refs/heads/main/UlasBaboAndSedzBabo"))()
+		end)
+	else
+		for _, data in ipairs(tabs[tabName]) do
+			createButton(data[1], data[2])
+		end
+	end
+end
+
+-- 🔹 Sekme butonları
+local orderedTabs = {"Oyun 1", "Oyun 2", "Ayarlar"}
+for _, tabName in ipairs(orderedTabs) do
+	local tabButton = Instance.new("TextButton")
+	tabButton.Size = UDim2.new(0, 80, 1, 0)
+	tabButton.BackgroundColor3 = colors.btn
+	tabButton.TextColor3 = colors.txt
+	tabButton.Font = Enum.Font.GothamBold
+	tabButton.TextSize = 14
+	tabButton.Text = tabName
+	Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 6)
+	tabButton.Parent = tabFrame
+	tabButton.MouseButton1Click:Connect(function()
+		for _, other in ipairs(tabFrame:GetChildren()) do
+			if other:IsA("TextButton") then
+				other.BackgroundColor3 = colors.btn
+			end
+		end
+		tabButton.BackgroundColor3 = colors.btn:Lerp(Color3.new(0,0,0), 0.3)
+		switchTab(tabName)
+	end)
+end
+
+switchTab("Oyun 1")
+tabFrame:FindFirstChildWhichIsA("TextButton").BackgroundColor3 = colors.btn:Lerp(Color3.new(0,0,0), 0.3)
+
+-- 🔹 F8 toggle
 UserInputService.InputBegan:Connect(function(input, gp)
-	if gp then return end
+	if gp or UserInputService:GetFocusedTextBox() then return end
 	if input.KeyCode == Enum.KeyCode.F8 then
-		if UserInputService:GetFocusedTextBox() then return end
 		mainFrame.Visible = not mainFrame.Visible
 	end
 end)
 
--- 🔹 Sürükleme sistemi
+-- 🔹 Sürükleme
 local dragging, dragStart, startPos
-local function updateDrag(input)
-	local delta = input.Position - dragStart
-	mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
 title.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = true
 		dragStart = input.Position
 		startPos = mainFrame.Position
 		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
 		end)
 	end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
 	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		updateDrag(input)
+		local delta = input.Position - dragStart
+		mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 	end
 end)
+
+-- 🔹 Bildirim
+local notif = Instance.new("Frame")
+notif.Size = UDim2.new(0, 360, 0, 50)
+notif.Position = UDim2.new(1, 380, 0.5, 0)
+notif.AnchorPoint = Vector2.new(1, 0.5)
+notif.BackgroundColor3 = colors.btn
+Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 10)
+notif.Parent = screenGui
+
+local notifText = Instance.new("TextLabel")
+notifText.Size = UDim2.new(1, -20, 1, 0)
+notifText.Position = UDim2.new(0, 10, 0, 0)
+notifText.BackgroundTransparency = 1
+notifText.Font = Enum.Font.GothamBold
+notifText.TextSize = 16
+notifText.TextColor3 = Color3.fromRGB(255, 255, 255)
+notifText.Text = "Menüyü aç/kapat: F8"
+notifText.Parent = notif
+
+TweenService:Create(notif, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(1, -20, 0.5, 0)}):Play()
+task.wait(4)
+TweenService:Create(notif, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {Position = UDim2.new(1, 380, 0.5, 0)}):Play()
+task.wait(0.7)
+notif:Destroy()
