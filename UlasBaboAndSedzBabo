@@ -84,6 +84,8 @@ layout.Parent = buttonsFrame
 
 -- 📌 Dinamik boyutlandırma
 local function updateFrameSize()
+	-- genişlik: minimum 260, sekme çubuğunun içeriğine göre genişle
+	-- yükseklik: minimum 120, butonların içeriğine göre uzar
 	mainFrame.Size = UDim2.new(0, math.max(260, tabLayout.AbsoluteContentSize.X + 30),
 		0, math.max(120, layout.AbsoluteContentSize.Y + 100))
 end
@@ -102,26 +104,36 @@ statusLabel.TextSize = 14
 statusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 statusLabel.Parent = mainFrame
 
--- 🔹 Sekmeler
+-- 🔹 Sekmeler (düzgün formatta entry'ler)
 local tabs = {
-	["Oyun 1"] = {
+	["Universal"] = {
+		{"CTRL Click TP", "https://obj.wearedevs.net/2/scripts/Click%20Teleport.lua"},
 		{"Infinite Yield", "https://raw.githubusercontent.com/DarkNetworks/Infinite-Yield/main/latest.lua"},
+		{"Fling", "https://pastebin.com/raw/LgZwZ7ZB"},
+		{"FE ChatHax", "https://obj.wearedevs.net/108324/scripts/FE%20ChatHax.lua"},
+		{"31 Script", "https://pastebin.com/raw/FWwdST5Y"},
+	},
+	["TSB"] = {
 		{"Phantasm", "https://raw.githubusercontent.com/ATrainz/Phantasm/refs/heads/main/Games/TSB.lua"},
 		{"Garou Tech", "https://raw.githubusercontent.com/needanewphone32-eng/tsbfiles/refs/heads/main/Main1.lua"},
-		{"FE ChatHax", "https://obj.wearedevs.net/108324/scripts/FE%20ChatHax.lua"},
 	},
-	["Oyun 2"] = {
-		{"Fling", "https://pastebin.com/raw/LgZwZ7ZB"},
-		{"CTRL Click TP", "https://obj.wearedevs.net/2/scripts/Click%20Teleport.lua"},
+	["BABFT"] = {
 		{"Oto Build", "https://raw.githubusercontent.com/max2007killer/auto-build-not-limit/main/buildaboatv2obs.txt"},
+		{"Oto Build 2 KEYLİ","https://raw.githubusercontent.com/catblox1346/StensUIReMake/refs/heads/main/Script/BoatBuilderHub"},
 		{"Candy Farm","https://raw.githubusercontent.com/catblox1346/StensUIReMake/refs/heads/main/BabftRelated/FastestCandyFarm"},
 		{"Build Çalma KEY: N-314159", "https://raw.githubusercontent.com/novakoolhub/Scripts/main/Scripts/NovBoatR1"},
+		{"Image Loader","https://raw.githubusercontent.com/TheRealAsu/BABFT/refs/heads/main/Loader.lua"},
 	},
 	["Ayarlar"] = {}
 }
 
--- 🔹 Buton oluşturucu
+-- 🔹 Buton oluşturucu (gelen verinin doğru formatta olduğundan emin olarak)
 local function createButton(name, url)
+	if type(name) ~= "string" or type(url) ~= "string" then
+		warn("createButton: yanlış format (name/url string olmalı)", name, url)
+		return
+	end
+
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(1, 0, 0, 32)
 	btn.BackgroundColor3 = colors.btn
@@ -148,6 +160,12 @@ end
 -- 🔹 Sekme değiştirici
 local activeTab
 local function switchTab(tabName)
+	-- güvenlik: tabs tablosunda gerçekten var mı kontrol et
+	if type(tabName) ~= "string" or tabs[tabName] == nil then
+		warn("switchTab: geçersiz tabName:", tabName)
+		return
+	end
+
 	for _, c in ipairs(buttonsFrame:GetChildren()) do
 		if c:IsA("TextButton") or c:IsA("Frame") then c:Destroy() end
 	end
@@ -184,13 +202,21 @@ local function switchTab(tabName)
 		end)
 	else
 		for _, data in ipairs(tabs[tabName]) do
-			createButton(data[1], data[2])
+			-- her data'nin bir isim ve bir URL içerdiğini garanti et
+			if type(data) == "table" and type(data[1]) == "string" and type(data[2]) == "string" then
+				createButton(data[1], data[2])
+			else
+				warn("switchTab: atlandı - hatalı entry:", tabName, data)
+			end
 		end
 	end
+
+	-- updateFrameSize çağır (içerik yenilendikten sonra)
+	updateFrameSize()
 end
 
 -- 🔹 Sekme butonları
-local orderedTabs = {"Oyun 1", "Oyun 2", "Ayarlar"}
+local orderedTabs = {"Universal", "TSB", "BABFT", "Ayarlar"}
 for _, tabName in ipairs(orderedTabs) do
 	local tabButton = Instance.new("TextButton")
 	tabButton.Size = UDim2.new(0, 80, 1, 0)
@@ -212,7 +238,8 @@ for _, tabName in ipairs(orderedTabs) do
 	end)
 end
 
-switchTab("Oyun 1")
+-- Burayı "Universal" ile değiştirdim (eski "Oyun 1" yoktu)
+switchTab("Universal")
 tabFrame:FindFirstChildWhichIsA("TextButton").BackgroundColor3 = colors.btn:Lerp(Color3.new(0,0,0), 0.3)
 
 -- 🔹 F8 toggle
